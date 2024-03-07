@@ -1,10 +1,10 @@
 import puppeteer, { Page } from 'puppeteer'
 import type { ApiClientDataResponse } from './api/types/client'
 import { ApiOverviewItemsResponse } from './api/types/overview-items'
-import { insertClient } from './db/client/insert-client'
 import type { Client } from './db/client'
+import { upsertClient } from './db/client/upsert-client'
 
-export default async function getClientData(): Promise<ApiClientDataResponse> {
+export default async function getSPClientData(): Promise<Client[] | undefined> {
   const isWin = process.platform === 'win32'
   const browser = await puppeteer.launch({
     headless: false,
@@ -28,6 +28,8 @@ export default async function getClientData(): Promise<ApiClientDataResponse> {
     'https://secure.simplepractice.com/frontend/base-clients?filter[inActiveTreatment]=true&filter[clinicianId]=1053979&filter[thisType]=client&sort=lastName',
     { waitUntil: 'networkidle0' }
   )
+
+  let clientsProcessed: Client[] = []
 
   const clientData: ApiClientDataResponse = await page.evaluate(() => {
     const bodyText = document.querySelector('body')?.innerText
@@ -74,17 +76,19 @@ export default async function getClientData(): Promise<ApiClientDataResponse> {
           active: client.attributes.inActiveTreatment
         }
 
-        const info = insertClient(newClient)
-        console.log('Info:', info)
+        upsertClient(newClient)
+        clientsProcessed.push(newClient)
       } catch (error) {
         console.error('Error navigating to overview items:', error)
         // Handle the error or attempt recovery}
       }
     }
+    await browser.close()
+    return clientsProcessed
+  } else {
+    await browser.close()
+    return
   }
-
-  await browser.close()
-  return clientData
 }
 
 async function safeGoto(page: Page, url: string, options = {}, retryCount = 3) {

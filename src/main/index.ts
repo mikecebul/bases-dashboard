@@ -2,7 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import getClientData from './getClientData'
+import getSPClientData from './getSPClientData'
+import getDBClientData from './getDBClientData'
 
 function createWindow(): void {
   // Create the browser window.
@@ -72,7 +73,12 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.handle('get-client-data', async () => {
-  const data = await getClientData()
+ipcMain.handle('get-sp-client-data', async () => {
+  const data = await getSPClientData()
+  return data
+})
+
+ipcMain.handle('get-db-client-data', async () => {
+  const data = getDBClientData()
   return data
 })

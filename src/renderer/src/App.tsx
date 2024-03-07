@@ -2,46 +2,65 @@ import { useQuery } from '@tanstack/react-query'
 import ClientTable from './components/client-table'
 import { Header } from './components/header'
 import { Button } from './components/ui/button'
-import { ApiClientDataResponse, ClientDataItem } from '../../main/api/types/client'
+import { Client } from '@db/client'
+import { Suspense, useEffect, useState } from 'react'
 
 function App(): JSX.Element {
-  const { data, isLoading, error, refetch } = useQuery<ApiClientDataResponse>({
-    queryKey: ['clientData'],
-    queryFn: () => window.api.getClientData(),
-    enabled: import.meta.env.PROD
+  const [clientData, setClientData] = useState<Client[]>([])
+  const { data: SPData, refetch: SPRefetch } = useQuery<Client[]>({
+    queryKey: ['SPclientData'],
+    queryFn: () => window.api.getSPClientData(),
+    enabled: false
+  })
+  const { data: DBData, refetch: DBRefetch } = useQuery<Client[]>({
+    queryKey: ['DBclientData'],
+    queryFn: () => window.api.getDBClientData(),
+    enabled: true
   })
 
-  function getData() {
-    refetch()
+  useEffect(() => {
+    if (DBData) {
+      setClientData(DBData)
+    }
+  }),
+    [DBData]
+
+  function getSPData() {
+    SPRefetch()
+    if (SPData) setClientData(SPData)
+  }
+
+  function getDBData() {
+    DBRefetch()
+    if (DBData) setClientData(DBData)
   }
 
   const transformedData =
-    data?.data.map((client: ClientDataItem) => ({
+    clientData?.map((client: Client) => ({
       id: client.id,
-      counselor: client.relationships.clinician.data.id,
-      attendance:
-        client.overviewItems[0].type === 'appointments'
-          ? client.overviewItems[0].attributes.attendanceStatus
-          : '-',
-      firstName: client.attributes.firstName,
-      lastName: client.attributes.lastName,
-      active: client.attributes.inActiveTreatment,
-      email: client.attributes.defaultEmailAddress
+      counselor: client.counselor,
+      attendance: client.attendance,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      active: client.active,
+      email: client.email
     })) || []
-
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>An error occurred: {error.message}</div>
 
   return (
     <div className="container flex flex-col max-w-full py-4 bg-background">
       <Header />
       <div className="mt-8">
         <div className="pb-8">
-          <Button variant="outline" onClick={getData} className="">
-            Get Client Data
+          <Button variant="outline" onClick={getSPData} className="">
+            Get Data From SP
+          </Button>
+          <Button variant="outline" onClick={getDBData} className="">
+            Get Data From DB
           </Button>
         </div>
-        <ClientTable clients={transformedData} />
+        <Suspense fallback={<div>Loading...</div>}>
+          <ClientTable clients={transformedData} />
+        </Suspense>
       </div>
     </div>
   )

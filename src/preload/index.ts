@@ -1,9 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { Client } from '../main/db/client'
 
 // Custom APIs for renderer
 const api = {
-  getClientData: (): Promise<any> => ipcRenderer.invoke('get-client-data')
+  getSPClientData: (): Promise<Client[]> => ipcRenderer.invoke('get-sp-client-data'),
+  getDBClientData: (): Promise<Client[]> => ipcRenderer.invoke('get-db-client-data')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

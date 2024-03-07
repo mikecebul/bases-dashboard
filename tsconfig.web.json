@@ -9,7 +9,7 @@
     "src/main/api/types/*",
     "src/main/api/types",
     "src/main/db/**/*"
-  ],
+, "src/main/getDBClientData.ts"  ],
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",

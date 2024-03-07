@@ -1,8 +1,18 @@
 import Database from 'better-sqlite3'
-
 import { Database as DatabaseType } from 'better-sqlite3'
+import { app } from 'electron'
+import path from 'path'
 
-const dbPath = './src/main/db/sqlite.db'
+const dbPath = path.join(app.getPath('userData'), 'sqlite.db')
+
+const ensureDirExists = (dirPath) => {
+  const fs = require('fs')
+  if (!fs.existsSync(dirPath)) {
+    fs.mkDirSync(dirPath, { recursive: true })
+  }
+}
+ensureDirExists(path.dirname(dbPath))
+
 export const db: DatabaseType = new Database(dbPath)
 
 db.exec(`

@@ -3,7 +3,8 @@ import {
   useReactTable,
   getCoreRowModel,
   flexRender,
-  getSortedRowModel
+  getSortedRowModel,
+  getFilteredRowModel
 } from '@tanstack/react-table'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
@@ -18,6 +19,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     initialState: {
       sorting: [
         {
@@ -27,6 +29,12 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         {
           id: 'lastName',
           desc: false
+        }
+      ],
+      columnFilters: [
+        {
+          id: 'active',
+          value: 'Active'
         }
       ]
     }

@@ -39,5 +39,8 @@ export const columns = [
     id: 'active',
     header: () => 'Active',
     cell: (info) => info.getValue(),
+    filterFn: (row, columnId, value) => {
+      return row.getValue(columnId) === value
+    }
   })
 ]

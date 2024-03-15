@@ -38,6 +38,6 @@ export const columns = [
   columnHelper.accessor((row) => (row.active === 'true' ? 'Active' : 'Inactive'), {
     id: 'active',
     header: () => 'Active',
-    cell: (info) => info.getValue()
+    cell: (info) => info.getValue(),
   })
 ]

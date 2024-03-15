@@ -17,3 +17,7 @@ export interface DbClientRow {
   email: string
   active: string
 }
+
+export interface DbClientID {
+  id: string
+}

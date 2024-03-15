@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import favicon from '../../resources/favicon.ico?asset'
 import getSPClientData from './getSPClientData'
 import getDBClientData from './getDBClientData'
 
@@ -13,7 +14,7 @@ function createWindow(): void {
     fullscreen: false,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === 'linux' ? { icon } : process.platform === 'win32' ? { favicon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

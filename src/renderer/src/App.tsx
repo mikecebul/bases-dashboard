@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from 'react'
 
 function App(): JSX.Element {
   const [clientData, setClientData] = useState<Client[]>([])
-  const { data: SPData, refetch: SPRefetch } = useQuery<Client[]>({
+  const { refetch: SPRefetch } = useQuery<Client[]>({
     queryKey: ['SPclientData'],
     queryFn: () => window.api.getSPClientData(),
     enabled: false
@@ -25,9 +25,14 @@ function App(): JSX.Element {
   }),
     [DBData]
 
-  function getSPData() {
-    SPRefetch()
-    if (SPData) setClientData(SPData)
+  async function getSPData() {
+    try {
+      const result = await SPRefetch()
+      if (result.error) console.log('Error fetching SP data:', result.error)
+      if (result.data) setClientData(result.data)
+    } catch (error) {
+      console.log('Unexpected error fetching SP data:', error)
+    }
   }
 
   function getDBData() {

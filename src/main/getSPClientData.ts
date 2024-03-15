@@ -3,6 +3,8 @@ import type { ApiClientDataResponse } from './api/types/client'
 import { ApiOverviewItemsResponse } from './api/types/overview-items'
 import type { Client } from './db/client'
 import { upsertClient } from './db/client/upsert-client'
+import { getClientsID } from './db/client/get-clients-id'
+import { updateClientActiveState } from './db/client/update-client-active-state'
 
 export default async function getSPClientData(): Promise<Client[] | undefined> {
   const isWin = process.platform === 'win32'
@@ -25,11 +27,13 @@ export default async function getSPClientData(): Promise<Client[] | undefined> {
   )
 
   await page.goto(
-    'https://secure.simplepractice.com/frontend/base-clients?filter[inActiveTreatment]=true&filter[clinicianId]=1053979&filter[thisType]=client&sort=lastName',
+    'https://secure.simplepractice.com/frontend/base-clients?filter[inActiveTreatment]=true&filter[clinicianId]=1053979&filter[thisType]=client&page[size]=50&sort=lastName',
     { waitUntil: 'networkidle0' }
   )
 
   let clientsProcessed: Client[] = []
+  const allClientIDsInDb = getClientsID()
+  const activeClientIDs = new Set()
 
   const clientData: ApiClientDataResponse = await page.evaluate(() => {
     const bodyText = document.querySelector('body')?.innerText
@@ -41,6 +45,8 @@ export default async function getSPClientData(): Promise<Client[] | undefined> {
     for (const client of clientData.data) {
       try {
         console.log('Client Id', client.id)
+        // add client id to active client set
+        activeClientIDs.add(client.id)
         // Construct the URL to fetch overview-items for the client
         const overviewItemsUrl = `https://secure.simplepractice.com/frontend/overview-items`
 
@@ -83,7 +89,22 @@ export default async function getSPClientData(): Promise<Client[] | undefined> {
         // Handle the error or attempt recovery}
       }
     }
+
+    // Update the activity status of clients who were not fetched in the current operation
+    // for (const clientID of allClientIDsInDb) {
+    //   if (!activeClientIDs.has(clientID)) {
+    //     // This client was not in the fetched list, so they should be marked inactive
+    //     updateClientActiveState(clientID)
+    //   }
+    // }
+    allClientIDsInDb.forEach((clientID) => {
+      if (!activeClientIDs.has(clientID)) {
+        updateClientActiveState(clientID)
+      }
+    })
+
     await browser.close()
+    console.log('SP Clients:', clientsProcessed)
     return clientsProcessed
   } else {
     await browser.close()
